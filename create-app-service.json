@@ -1,0 +1,84 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the web app that you wish to create."
+            }
+        },
+        "environment": {
+            "type": "string",
+            "metadata": {
+                "description": "The custom hostname that you wish to add."
+            }
+        }
+    },
+    "variables": {
+        "appName":"[concat(parameters('webAppName'),'-',parameters('environment'))]",
+        "appServicePlanName": "[concat(parameters('webAppName'),'-',parameters('environment'),'-sp')]",
+        "vnetName": "[concat('vnet-',parameters('environment'),'-rettsdata')]",
+        "customHostname" : "[concat(parameters('webAppName'),'-',parameters('environment'),'.rettsdata.no')]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2016-03-01",
+            "name": "[variables('appServicePlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('appServicePlanName')]"
+            },
+            "sku": {
+                "name" : "S1",
+                "tier": "Standard",
+                "size": "1",
+                "family": "S",
+                "capacity": "1"
+            }
+        },
+        {
+            "apiVersion": "2016-03-01",
+            "name": "[variables('appName')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('appName')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverFarms',variables('appServicePlanName'))]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverFarms/',variables('appServicePlanName'))]"
+            ]
+        },        
+        {
+            "type": "Microsoft.Web/sites/hostnameBindings",
+            "name": "[concat(variables('appName'), '/',variables('customHostname'))]",
+            "apiVersion": "2016-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "clientAffinityEnabled": false
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/sites/',variables('appName'))]"
+            ]
+        },
+        {
+            "comments": "Setup properties on the app service",
+            "type": "Microsoft.Web/sites/config",
+            "name": "[concat(variables('appName'), '/', 'web')]",
+            "apiVersion": "2016-08-01",
+            "properties": {
+                "phpVersion": "",
+                "use32BitWorkerProcess": false,
+                "webSocketsEnabled": true,
+                "alwaysOn": true,
+                "vnetName": "[variables('vnetName')]",
+                "siteAuthEnabled": false
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/sites/',variables('appName'))]"
+            ]
+        }
+    ]
+}
