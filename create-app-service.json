@@ -17,7 +17,7 @@
     },
     "variables": {
         "appName":"[concat(parameters('webAppName'),'-',parameters('environment'))]",
-        "appServicePlanName": "[concat(parameters('webAppName'),'-',parameters('environment'),'-sp')]",
+        "appServicePlanName": "[concat(parameters('webAppName'),'-rettsdata-',parameters('environment'),'-sp')]",
         "vnetName": "[concat('vnet-',parameters('environment'),'-rettsdata')]",
         "customHostname" : "[concat(parameters('webAppName'),'-',parameters('environment'),'.rettsdata.no')]"
     },
@@ -44,7 +44,7 @@
             "type": "Microsoft.Web/sites",
             "location": "[resourceGroup().location]",
             "properties": {
-                "name": "[variables('appName')]",
+                "name": "[concat(variables('appName'), '-rettsdata')]",
                 "serverFarmId": "[resourceId('Microsoft.Web/serverFarms',variables('appServicePlanName'))]"
             },
             "dependsOn": [
